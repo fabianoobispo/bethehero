@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
+import { View, FlatList, Image, Text, TouchableOpacity } from 'react-native';
+
 import api from '../../services/api';
 
 import logoImg from '../../assets/logo.png'
@@ -9,98 +10,84 @@ import logoImg from '../../assets/logo.png'
 import styles from './styles';
 
 export default function Incidents() {
-  const navigation = useNavigation();
   const [incidents, setIncidents] = useState([]);
-  const [total, setTotal]= useState(0);
+  const [total, setTotal] = useState([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
+
+  const navigation = useNavigation();
 
   function navigateToDetail(incident) {
-    navigation.navigate('Detail', {incident});
+    navigation.navigate('Detail', { incident });
   }
 
-
   async function loadIncidents() {
-    if (loading){
+    if (loading) {
       return;
     }
 
-    if(total > 0 && incidents.length === total) {
+    if (total > 0 && incidents.lenght === total) {
       return;
     }
+
     setLoading(true);
 
     const response = await api.get('incidents', {
-      params: {page}
+      params: {
+        page
+      }
     });
-    
-    setIncidents([...incidents,...response.data]);
+
+    setIncidents([...incidents, ...response.data]);
     setTotal(response.headers['x-total-count']);
     setPage(page + 1);
     setLoading(false);
-
   }
+
   useEffect(() => {
     loadIncidents();
-  }, []);
-
-
+  }, [])
 
   return (
     <View style={styles.container}>
-      <View style={styles.header} >
+      <View style={styles.header}>
         <Image source={logoImg} />
         <Text style={styles.headerText}>
-          Total de <Text style={styles.headerTextBold}>{total} casos</Text>.
+          Total de <Text style={styles.headerTextBold}>{total} casos</Text>
         </Text>
       </View>
-      <Text style={styles.title}>Bem Vindo!</Text>
-      <Text style={styles.description}>
-        Escolha um dos casos abaixo e salve o dia!
-      </Text>
 
-      <FlatList 
+      <Text style={styles.title}>Bem vindo</Text>
+      <Text style={styles.description}>Escolha um dos casos abaixo e salve o dia.</Text>
+
+      <FlatList
         style={styles.incidentList}
         data={incidents}
         keyExtractor={incident => String(incident.id)}
         showsVerticalScrollIndicator={false}
         onEndReached={loadIncidents}
         onEndReachedThreshold={0.2}
-        renderItem={({ item: incident }) =>(
-
+        renderItem={({ item: incident }) => (
           <View style={styles.incident}>
+            <Text style={[styles.incidentProperty, { marginTop: 0 }]}>ONG:</Text>
+            <Text style={styles.incidentValue}>{incident.name}</Text>
 
-          <Text style={styles.incidentProperty}>ONG:</Text>
-          <Text style={styles.incidentValue}>{incident.name}</Text>
+            <Text style={styles.incidentProperty}>CASO:</Text>
+            <Text style={styles.incidentValue}>{incident.title}</Text>
 
-          <Text style={styles.incidentProperty}>CASO:</Text>
-          <Text style={styles.incidentValue}>{incident.title}</Text>
+            <Text style={styles.incidentProperty}>VALOR:</Text>
+            <Text style={styles.incidentValue}>{Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incident.value)}</Text>
 
-
-          <Text style={styles.incidentProperty}>VLOR:</Text>
-          <Text style={styles.incidentValue}>
-            {Intl.NumberFormat('pt-BR', {
-              style: 'currency', 
-              currency: 'BRL'}).format(incident.value)}</Text>
-
-          <TouchableOpacity
-            style={styles.detailsButon}
-            onPress={() => navigateToDetail(incident)}
+            <TouchableOpacity
+              style={styles.detailsButton}
+              onPress={() => navigateToDetail(incident)}
             >
-            <Text style={styles.detailsButonText}>
-              Ver mais detalhes
-            </Text>
-            <Feather name={"arrow-right"} size={16} color="#e02041"/>
-          </TouchableOpacity>
-
-
-        </View>
+              <Text style={styles.detailsButtonText}>Ver mais detalhes</Text>
+              <Feather name="arrow-right" size={16} color="#e02041" />
+            </TouchableOpacity>
+          </View>
         )}
       />
-
-
-  
-    
     </View>
   );
 }
